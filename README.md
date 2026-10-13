@@ -16,6 +16,7 @@ We consider two insurance applications:
 
 The CEs are generated for individual observations and evaluated according to several criteria:
 
+* **Actionability**: recommendations involve only mutable features;
 * **Proximity**: how close the counterfactual is to the original observation (i.e., the query instance);
 * **Plausibility**: how similar the counterfactual is to observations in the data;
 * **Reliability**: whether the counterfactual lies in a region of low predictive uncertainty, measured using conformal prediction intervals based on LACP.

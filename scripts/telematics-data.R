@@ -345,7 +345,7 @@ unaware_cf_nice_glm
 
 # With the CP constraint
 aware_cf_nice_glm <- cf_nice_glm |>
-  filter(upper < .21)
+  filter(upper < .2)
 aware_cf_nice_glm
 
 ##### MOC #####
@@ -504,6 +504,7 @@ x <- seq_len(ncol(mat))
 
 pdf("figs/telematics-decision-plot.pdf", width = 7, height = 4)
 
+###### Figure 4 ######
 par(mar = c(5, 1, 2, 5))
 
 plot(NA, xlim = c(0.75, ncol(mat) + 0.25), ylim = c(0.05, .25), xaxt = "n", 

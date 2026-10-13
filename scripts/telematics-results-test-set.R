@@ -9,7 +9,7 @@ library(purrr)
 source("scripts/utils.R")
 
 # WhatIf, NICE and MOC results
-load("out/telematics-ce-test.Rda")
+load("out/telematics-ce-test-alpha-2.Rda")
 names(res_all_test)
 # DiCE results
 ces_dice <- read.csv("out/cf_dice_test.csv")
@@ -200,7 +200,7 @@ res_shared <- res_all_test_wo_na |>
   ungroup() |>
   select(-n_methods)
 
-#### Table 6 ####
+#### Table 7 ####
 
 res_all_test_wo_na |>
   group_by(method, reliable) |> 
@@ -227,7 +227,7 @@ res_all_test_wo_na_sev |>
   group_by(reliable) |>
   summarise(reduction = mean(reduction))
 
-#### Table 7 ####
+#### Table 8 ####
 
 res_ce_test <- res_shared |>
   group_by(method) |>
@@ -263,3 +263,4 @@ res_ce_test <- res_ce_test |>
 View(res_ce_test |> select(method, plausibility, proximity, sparsity, validity, 
                            reliability, exec_time, shared, duplicates,
                            n_cf))
+

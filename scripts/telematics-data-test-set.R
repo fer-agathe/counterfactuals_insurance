@@ -216,7 +216,8 @@ ce_one_query <- function(idx_q) {
     predict_fun = predict_fun_glm,
     df_calib = df_calib,
     model = glm_model,
-    ce_object = whatif_glm
+    ce_object = whatif_glm,
+    alpha = .2
   )
   
   # NICE
@@ -229,7 +230,8 @@ ce_one_query <- function(idx_q) {
     predict_fun = predict_fun_glm,
     df_calib = df_calib,
     model = glm_model,
-    ce_object = nice_glm
+    ce_object = nice_glm,
+    alpha = .2
   )
   
   # MOC
@@ -241,7 +243,8 @@ ce_one_query <- function(idx_q) {
       predict_fun = predict_fun_glm,
       df_calib = df_calib,
       model = glm_model,
-      ce_object = moc_glm
+      ce_object = moc_glm,
+      alpha = .2
       ))
   
   # Combine results
@@ -287,4 +290,4 @@ with_progress({
     }
   )
 })
-save(res_all_test, file = "out/telematics-ce-test.Rda")
+save(res_all_test, file = "out/telematics-ce-test-alpha-2.Rda")

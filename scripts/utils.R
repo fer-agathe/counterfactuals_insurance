@@ -407,7 +407,8 @@ calculate_ce <- function(
     predict_fun,
     df_calib,
     model,
-    ce_object
+    ce_object,
+    alpha = .2
 ) {
   
   start <- Sys.time()
@@ -431,7 +432,7 @@ calculate_ce <- function(
       df |> select(-c(
         dist_x_interest, dist_train, dist_target, no_changed, pred
       )),
-      alpha = .2
+      alpha = alpha
     )
     # Final df
     res_ce <- df |> 

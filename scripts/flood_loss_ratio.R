@@ -460,6 +460,11 @@ df_test_ <- df_test |>
 test_property_value <- df_test_$property_value
 df_test_ <- df_test_ |> select(-property_value)
 
+# Save for DiCE in Python
+write.csv(df_train_, "out/flood_df_train.csv", row.names = FALSE)
+write.csv(df_calib_, "out/flood_df_calib.csv", row.names = FALSE)
+write.csv(df_test_,  "out/flood_df_test.csv",  row.names = FALSE)
+
 # XGBoost
 df_train_dummy <- as.data.frame(model.matrix( ~ 0 +. , data = df_train_))
 xgb_df_train <- df_train_dummy |> select(-Y)
@@ -517,6 +522,9 @@ xgb_model <- xgb.train(
   nrounds = best_params$best_nrounds,
   verbose = 0
 )
+# Save model for Python
+xgb.save(xgb_model, "out/flood_xgb_model.json")
+
 # Transform the calibration and test dataframes into the XGBoost matrix for R
 df_calib_dummy <- as.data.frame(model.matrix( ~ 0 +. , data = df_calib_))
 xgb_df_calib <- df_calib_dummy |> select(-Y)
@@ -536,6 +544,10 @@ xgb_pred_test <- predict(xgb_model, newdata = xgb_test_mat)
 
 # Predictions on the training set
 xgb_pred_train <- predict(xgb_model, newdata = xgb_train_mat)
+
+# Save XGB matrices for Python
+write.csv(xgb_df_train, "out/flood_xgb_train_matrix.csv", row.names = FALSE)
+write.csv(xgb_df_test, "out/flood_xgb_test_matrix.csv", row.names = FALSE)
 
 #### RF model fitting ####
 # 5-fold CV
@@ -748,7 +760,7 @@ aware_cf_whatif_xgb
 
 nice_xgb <- NICERegr$new(
   predictor_xgb,
-  optimization = "plausibility",
+  optimization = "proximity",
   x_nn_correct = TRUE,
   return_multiple = TRUE,
   finish_early = FALSE,
@@ -973,7 +985,7 @@ aware_cf_whatif_xgb
 
 nice_xgb <- NICERegr$new(
   predictor_xgb,
-  optimization = "plausibility",
+  optimization = "proximity",
   x_nn_correct = TRUE,
   return_multiple = TRUE,
   finish_early = FALSE,
@@ -1040,8 +1052,8 @@ moc_xgb <- MOCRegr$new(
   p_rec_gen = 0.62,
   p_mut = 0.73,
   p_mut_gen = 0.5,
-  mu = 10,
-  n_generations = 25
+  mu = 5,
+  n_generations = 10
 )
 
 ces_moc_xgb<- moc_xgb$find_counterfactuals(
@@ -1094,36 +1106,36 @@ all_df_moc_xgb |>
   select(all_of(c("label", actionable_variables, "pred", "upper", "width"))) |>
   mutate(claim = pred * query_property_value)
 
-##### Plots #####
-
 # With the R package counterfactuals
 ces_whatif_xgb$plot_parallel(feature_names = actionable_variables)
 
 # Preparing data to plot
 data <- all_df_whatif_xgb |>
-  mutate(pred = pred * query_property_value)
+  bind_rows(all_df_nice_xgb) #|>
+  #mutate(pred = pred * query_property_value)
 
 features_to_plot <- c(actionable_variables, "pred")
 
 df <- data |>
   select(all_of(c(features_to_plot, "label"))) |>
-  rename(pred. = pred)
+  rename(pred. = pred) |>
+  distinct()
 
 claim_query <- df |>
   filter(label == "query") |>
   pull(pred.)
 
 # Fixed vertical range
-range <- 100000
+range <- .5
 
 # Number of modalities
 n_basement <- n_distinct(df_test_$basement)
 n_elev     <- n_distinct(df_test_$elevated_building)
 n_loc      <- n_distinct(df_test_$contents_location)
 
-basement_scale <- range / (n_basement - 1)
-elev_scale     <- range / (n_elev - 1)
-loc_scale      <- range / (n_loc - 1)
+basement_scale <- range / n_basement
+elev_scale     <- range / n_elev
+loc_scale      <- range / n_loc
 
 df_to_plot <- df |>
   mutate(
@@ -1148,7 +1160,7 @@ df_to_plot <- df |>
       "Mobile_home"             = claim_query - 3 * loc_scale
     )
   ) |>
-  slice(c(5, 7, 3, 4, 9))
+  slice(c(5, 10, 3, 4, 9))
 
 mat <- df_to_plot |>
   select(-label) |>
@@ -1167,14 +1179,16 @@ line_colors <- c(
 
 x <- seq_len(ncol(mat))
 
+###### Figure 3 #######
+
 pdf("figs/flood-decision-plot.pdf", width = 7, height = 4)
 
 par(mar = c(5, 1, 2, 5))
 
-plot(NA, xlim = c(0.75, ncol(mat) + 0.25), ylim = c(.6e5, 1.8e5), xaxt = "n", 
+plot(NA, xlim = c(0.75, ncol(mat) + 0.25), ylim = c(0, .45), xaxt = "n", 
      yaxt = "n", xlab = "", ylab = "", bty = "n")
 
-abline(h = seq(.6e5, 1.8e5, by = 2e4), col = "grey90", lty = 1)
+abline(h = seq(0, .4, by = .1), col = "grey90", lty = 1)
 
 df_to_plot$label[which(df_to_plot$label=="cf")] <- "CE"
 
@@ -1191,16 +1205,16 @@ for (i in seq_len(nrow(mat))) {
 
 axis(1, at = x, labels = colnames(mat), lwd = 0, lwd.ticks = 1, cex.axis = 0.9)
 
-axis(4, at = seq(.6e5, 1.8e5, by = 2e4), 
-     labels = comma(seq(.6e5, 1.8e5, by = 2e4)), las = 1, lwd = 0, lwd.ticks = 1,
+axis(4, at = seq(0, .4, by = .1), 
+     labels = comma(seq(0,.4, by = .1)), las = 1, lwd = 0, lwd.ticks = 1,
      cex.axis = 0.85)
 
 text(x = 1, y = mat[c(1,3,5), 1], labels = c("0", "1", "3"), pos = 3, cex = 0.8)
 
-text(x = 2, y = mat[2, 2], labels = "no", pos = 3, cex = 0.8)
+text(x = 2, y = mat[3, 2], labels = "no", pos = 3, cex = 0.8)
 text(x = 2, y = mat[1, 2], labels = "yes", pos = 4, cex = 0.8)
 
-text(x = 3, y = mat[2, 3]-5000, labels = "lowest floor and above", pos = 1, cex = 0.75)
+text(x = 3, y = mat[3, 3]-.015, labels = "lowest floor and above", pos = 1, cex = 0.75)
 text(x = 3, y = mat[5, 3], labels = "lowest floor only", pos = 3, cex = 0.75)
 
 library(latex2exp)
@@ -1221,7 +1235,7 @@ legend("bottom", inset = c(0, -0.35), #legend = names(line_colors),
 
 dev.off()
 
-# SHAP for the 2nd query instance 
+###### SHAP ######
 
 # XGBoost test data without Y
 X_test <- xgb_df_test
@@ -1271,6 +1285,7 @@ cumulative_pred_top10 <- exp(cumulative_log_top10)
 # Contributions on the original scale
 contributions_top10 <- diff(cumulative_pred_top10)
 
+####### Table 12 #######
 # Create table
 waterfall_table <- data.frame(
   feature = feature_names_top10,
@@ -1284,10 +1299,9 @@ waterfall_table <- data.frame(
       TRUE ~ "No change"
     )
   )
-
 waterfall_table
 
-# LIME for the 2nd query instance
+###### LIME ######
 predict_xgb <- function(model, newdata) {
   predict(
     model,
@@ -1307,6 +1321,7 @@ explanation <- explain(
   n_features = 10
 )
 
+####### Table 13 #######
 lime_table <- explanation |>
   arrange(desc(abs(feature_weight))) |>
   mutate(
