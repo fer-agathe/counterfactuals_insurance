@@ -165,6 +165,10 @@ expo_query <- df_test$Duration[idx_query]
 glm_pred_query <- glm_pred_test[idx_query]
 glm_pred_query
 
+# Empirical CDF
+F_pred_test <- ecdf(glm_pred_test)
+F_pred_test(glm_pred_query)
+
 # Exposure treatment: the same as the query instance so that it is considered 
 # as an immutable feature
 df_train_ <- df_train |> mutate(Duration = expo_query) |> distinct()
@@ -198,6 +202,9 @@ c(glm_pred_query, predictor_glm$predict(query))
 # Uncertainty of the query instance
 upper_query <- lacp_glm$upper[idx_query]
 width_query <- lacp_glm$width[idx_query]
+
+F_width_test <-  ecdf(lacp_glm$width)
+F_width_test(width_query)
 
 #### Counterfactual Explanations ####
 

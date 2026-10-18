@@ -667,6 +667,10 @@ xgb_pred_query <- xgb_pred_test[idx_query]
 df_test_$Y[idx_query]
 query_property_value <- test_property_value[idx_query]
 
+# Empirical CDF
+F_pred_test <- ecdf(xgb_pred_test)
+F_pred_test(xgb_pred_query)
+
 # Verification of the prediction function -> CORRECT
 c(xgb_pred_query, predictor_xgb$predict(query))
 
@@ -676,6 +680,8 @@ width_query <- lacp_xgb$width[idx_query]
 # Compared to the average uncertainty
 summary(lacp_xgb$width)
 width_query >= quantile(lacp_xgb$width, probs = .75)
+F_width_test <-  ecdf(lacp_xgb$width)
+F_width_test(width_query)
 
 ###### WhatIf ######
 whatif_xgb <- WhatIfRegr$new(
@@ -893,6 +899,9 @@ xgb_pred_query <- xgb_pred_test[idx_query]
 df_test_$Y[idx_query]
 query_property_value <- test_property_value[idx_query]
 
+# Empirical cdf
+F_pred_test(xgb_pred_query)
+
 # Verification of the prediction function -> CORRECT
 c(xgb_pred_query, predictor_xgb$predict(query))
 
@@ -902,6 +911,7 @@ width_query <- lacp_xgb$width[idx_query]
 # Compared to the average uncertainty
 summary(lacp_xgb$width)
 width_query >= quantile(lacp_xgb$width, probs = .75)
+F_width_test(width_query)
 
 ###### WhatIf ######
 whatif_xgb <- WhatIfRegr$new(

@@ -15,3 +15,4 @@
 
 # Keep Jupyter notebooks
 !*.ipynb
+.Rproj.user
