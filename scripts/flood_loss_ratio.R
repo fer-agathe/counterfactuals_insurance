@@ -671,6 +671,10 @@ query_property_value <- test_property_value[idx_query]
 F_pred_test <- ecdf(xgb_pred_test)
 F_pred_test(xgb_pred_query)
 
+# Empirical CDF: true outcome
+F_y_test <- ecdf(df_test_$Y)
+F_y_test(df_test_$Y[idx_query])
+
 # Verification of the prediction function -> CORRECT
 c(xgb_pred_query, predictor_xgb$predict(query))
 
@@ -901,6 +905,9 @@ query_property_value <- test_property_value[idx_query]
 
 # Empirical cdf
 F_pred_test(xgb_pred_query)
+
+# Empirical CDF: true outcome
+F_y_test(df_test_$Y[idx_query])
 
 # Verification of the prediction function -> CORRECT
 c(xgb_pred_query, predictor_xgb$predict(query))

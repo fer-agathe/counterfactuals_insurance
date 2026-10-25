@@ -169,6 +169,9 @@ glm_pred_query
 F_pred_test <- ecdf(glm_pred_test)
 F_pred_test(glm_pred_query)
 
+F_y_test <- ecdf(df_test$Y)
+F_y_test(df_test$Y[idx_query])
+
 # Exposure treatment: the same as the query instance so that it is considered 
 # as an immutable feature
 df_train_ <- df_train |> mutate(Duration = expo_query) |> distinct()
